@@ -4,34 +4,67 @@
 * @description Remove annoying buttons like the Gift button from the chat box.
 * @author Qb
 * @authorId 133659541198864384
-* @version 1.1.0
+* @version 1.3.2
 * @invite gj7JFa6mF8
-* @source https://github.com/QbDesu/BetterDiscordAddons/blob/potato/Plugins/RemoveChatButtons
-* @updateUrl https://raw.githubusercontent.com/QbDesu/BetterDiscordAddons/potato/Plugins/RemoveChatButtons/RemoveChatButtons.plugin.js
+* @source https://github.com/BleedingBD/plugin-RemoveChatButtons
+* @updateUrl https://raw.githubusercontent.com/BleedingBD/plugin-RemoveChatButtons/main/RemoveChatButtons.plugin.js
 */
 /*@cc_on
 @if (@_jscript)
-    
-    // Offer to self-install for clueless users that try to run this directly.
-    var shell = WScript.CreateObject("WScript.Shell");
-    var fs = new ActiveXObject("Scripting.FileSystemObject");
-    var pathPlugins = shell.ExpandEnvironmentStrings("%APPDATA%\BetterDiscord\plugins");
-    var pathSelf = WScript.ScriptFullName;
-    // Put the user at ease by addressing them in the first person
-    shell.Popup("It looks like you've mistakenly tried to run me directly. \n(Don't do that!)", 0, "I'm a plugin for BetterDiscord", 0x30);
-    if (fs.GetParentFolderName(pathSelf) === fs.GetAbsolutePathName(pathPlugins)) {
-        shell.Popup("I'm in the correct folder already.", 0, "I'm already installed", 0x40);
-    } else if (!fs.FolderExists(pathPlugins)) {
-        shell.Popup("I can't find the BetterDiscord plugins folder.\nAre you sure it's even installed?", 0, "Can't install myself", 0x10);
-    } else if (shell.Popup("Should I copy myself to BetterDiscord's plugins folder for you?", 0, "Do you need some help?", 0x34) === 6) {
-        fs.CopyFile(pathSelf, fs.BuildPath(pathPlugins, fs.GetFileName(pathSelf)), true);
-        // Show the user where to put plugins in the future
-        shell.Exec("explorer " + pathPlugins);
-        shell.Popup("I'm installed!", 0, "Successfully installed", 0x40);
-    }
-    WScript.Quit();
+
+var shell = WScript.CreateObject("WScript.Shell");
+shell.Popup("It looks like you've mistakenly tried to run me directly. That's not how you install plugins. \n(So don't do that!)", 0, "I'm a plugin for BetterDiscord", 0x30);
 
 @else@*/
+class Styler {
+    pluginName = "";
+    styles = new Set();
+    index = 0;
+
+    constructor(pluginName) {
+        this.pluginName = pluginName;
+    }
+
+    /**
+     * Add a stylesheet to the document.
+     * @param name The name of the stylesheet, can be used to remove it later.
+     * @param style The css string to add as a stylesheet.
+     * @returns A function that removes the stylesheet from the document.
+     */
+    add(name, style) {
+        if (!style) {
+            style = name;
+            name = `${this.index++}`;
+        }
+        const key = `${this.pluginName}--Styler--${name}`;
+        BdApi.injectCSS(key, style);
+        this.styles.add(key);
+        return () => {
+            this.remove(name);
+        };
+    }
+
+    /**
+     * Remove a stylesheet with the given name from the document.
+     * @param name The name of the stylesheet to remove.
+     */
+    remove(name) {
+        const key = `${this.pluginName}--Styler--${name}`;
+        BdApi.clearCSS(key);
+        this.styles.delete(key);
+    }
+
+    /**
+     * Remove all stylesheets that were added by this Styler instance from the document.
+     */
+    removeAll() {
+        for (const key of this.styles) {
+            BdApi.clearCSS(key);
+        }
+        this.styles.clear();
+        this.index = 0;
+    }
+}
 
 module.exports = (() => {
     const config = {
@@ -44,17 +77,17 @@ module.exports = (() => {
                     github_username: "QbDesu"
                 }
             ],
-            version: "1.1.0",
+            version: "1.3.2",
             description: "Remove annoying buttons like the Gift button from the chat box.",
-            github: "https://github.com/QbDesu/BetterDiscordAddons/blob/potato/Plugins/RemoveChatButtons",
-            github_raw: "https://raw.githubusercontent.com/QbDesu/BetterDiscordAddons/potato/Plugins/RemoveChatButtons/RemoveChatButtons.plugin.js"
+            github: "https://github.com/BleedingBD/plugin-RemoveChatButtons",
+            github_raw: "https://raw.githubusercontent.com/BleedingBD/plugin-RemoveChatButtons/main/RemoveChatButtons.plugin.js"
         },
         defaultConfig: [
             {
                 type: "switch",
                 id: "giftButton",
-                name: "Remove Gift Button",
-                note: "Removes the Gift Nitro button from the chat.",
+                name: "Remove Gift/Boost Button",
+                note: "Removes the Gift Nitro/Boost Server button from the chat.",
                 value: true,
             },
             {
@@ -86,153 +119,154 @@ module.exports = (() => {
                 value: false,
             },
             {
-                type: "switch",
-                id: "cssOnly",
-                name: "CSS-Only Mode",
-                note: "This is useful in case there is incompatibilities with plugins or themes.",
-                value: false,
+                type: "category",
+                name: "Direct Messages",
+                id: "dms",
+                settings: [
+                    {
+                        type: "switch",
+                        name: "Friends Tab",
+                        note: "Removes the friends tab button from the DM list.",
+                        id: "friendsTab",
+                        value: false
+                    },
+                    {
+                        type: "switch",
+                        name: "Nitro Tab",
+                        note: "Removes the nitro tab button from the DM list.",
+                        id: "premiumTab",
+                        value: true
+                    }
+                ]
             }
         ],
         changelog: [
-            { title: "Features", type: "added", items: ["Added CSS-Only Mode to the config options"] },
-            { title: "Changes", type: "changes", items: [
-                "Refactored logic for hiding most buttons.",
-                "Changed plugin name to avoid confusion with newly released plugin"
-            ] }
+            {
+                title: "Fixes", type: "fixed", items: [
+                    "Partial rewrite. Everything should work again."
+                ]
+            },
+            {
+                title: "Changes", type: "changed", items: [
+                    "Moved to a new GitHub repo."
+                ]
+            }
         ]
     };
     return !global.ZeresPluginLibrary ? class {
         constructor() { this._config = config; }
         load() {
-            BdApi.showConfirmationModal("Library plugin is needed", 
-            [`The library plugin needed for ${config.info.name} is missing. Please click Download Now to install it.`], {
+            BdApi.showConfirmationModal("Library plugin is needed",
+                [`The library plugin needed for ${config.info.name} is missing. Please click Download Now to install it.`], {
                 confirmText: "Download",
                 cancelText: "Cancel",
                 onConfirm: () => {
                     require("request").get("https://rauenzi.github.io/BDPluginLibrary/release/0PluginLibrary.plugin.js", async (error, response, body) => {
-                    if (error) return require("electron").shell.openExternal("https://betterdiscord.app/Download?id=9");
-                    await new Promise(r => require("fs").writeFile(require("path").join(BdApi.Plugins.folder, "0PluginLibrary.plugin.js"), body, r));
-                });
-            }
-        });
+                        if (error) return require("electron").shell.openExternal("https://betterdiscord.app/Download?id=9");
+                        await new Promise(r => require("fs").writeFile(require("path").join(BdApi.Plugins.folder, "0PluginLibrary.plugin.js"), body, r));
+                        window.location.reload();
+                    });
+                }
+            });
+        }
+        start() { }
+        stop() { }
     }
-    start() { }
-    stop() { }
-}
-: (([Plugin, Api]) => {
-        const plugin = (Plugin, Api) => {
-            const {
-                Patcher,
-                DOMTools,
-                WebpackModules,
-                PluginUtilities,
-                Logger,
-                DiscordModules
-            } = Api;
-
-            // thanks to Strencher for pointing out these modules
-            const ChannelTextAreaContainer = WebpackModules.find(m => m?.type?.render?.displayName === "ChannelTextAreaContainer")?.type;
-            //const ChannelPremiumGiftButton = WebpackModules.find(m => m.type.displayName === "ChannelPremiumGiftButton")?.type;
-            const ChannelGIFPickerButton = WebpackModules.find(m => m.type.render.displayName === "ChannelGIFPickerButton")?.type;
-            const ChannelEmojiPicker = WebpackModules.find(m => m.type.render.displayName === "ChannelEmojiPicker")?.type;
-            const ChannelStickerPickerButton = WebpackModules.find(m => m.type.render.displayName === "ChannelStickerPickerButton")?.type;
-
-            const buttonClasses = WebpackModules.getByProps("emojiButton", "stickerButton");
-            const channelTextAreaSelector = new DOMTools.Selector(buttonClasses.channelTextArea);
-            const emojiButtonSelector = new DOMTools.Selector(buttonClasses.emojiButton);
-            const stickerButtonSelector = new DOMTools.Selector(buttonClasses.stickerButton);
-            const attachButtonSelector = new DOMTools.Selector(buttonClasses.attachButton);
-            const getCssKey = name => `${config.info.name}--${name}`;
-            const getCssRule = child => `${channelTextAreaSelector} ${child} { display: none; }`;
-            
-            return class RemoveChatButtons extends Plugin {
-                hideGiftKey = getCssKey("hideGiftButton");
-                hideGifKey = getCssKey("hideGifButton");
-                hideEmojiKey = getCssKey("hideEmojiButton");
-                hideStickerKey = getCssKey("hideStickerButton");
-                hideAttachKey = getCssKey("hideAttachButton");
-                //
-                hideEmojiButtonCss = getCssRule(emojiButtonSelector);
-                hideStickerButtonCss = getCssRule(stickerButtonSelector);
-                hideAttachButtonCss = getCssRule(attachButtonSelector);
+        : (([Plugin, Api]) => {
+            const plugin = (Plugin, Api) => {
+                const {
+                    DiscordModules: { LocaleManager },
+                    DOMTools,
+                    Logger,
+                    PluginUtilities,
+                    WebpackModules
+                } = Api;
                 
-                addStyles() {
-                    if(this.settings.cssOnly){
-                        if (this.settings.giftButton) {
-                            PluginUtilities.addStyle(
-                                this.hideGiftKey,
-                                getCssRule(`[aria-label="${DiscordModules.Strings.PREMIUM_GIFT_BUTTON_LABEL}"]`)
-                            )
-                        }
-                        if (this.settings.gifButton) {
-                            PluginUtilities.addStyle(
-                                this.hideGifKey,
-                                getCssRule(`[aria-label="${DiscordModules.Strings.GIF_BUTTON_LABEL}"]`)
-                            )
-                        }
-                        if (this.settings.emojiButton) PluginUtilities.addStyle(this.hideEmojiKey, this.hideEmojiButtonCss);
-                        if (this.settings.stickerButton) PluginUtilities.addStyle(this.hideStickerKey, this.hideStickerButtonCss);
-                        if (this.settings.attachButton) PluginUtilities.addStyle(this.hideAttachKey, this.hideAttachButtonCss);
+                const Messages = WebpackModules.getByProps("PREMIUM_GIFT_BUTTON_LABEL");
+
+                const buttonClasses = WebpackModules.getByProps("emojiButton", "stickerButton");
+                const channelTextAreaSelector = new DOMTools.Selector(buttonClasses.channelTextArea);
+                const emojiButtonSelector = new DOMTools.Selector(buttonClasses.emojiButton);
+                const stickerButtonSelector = new DOMTools.Selector(buttonClasses.stickerButton);
+                const attachButtonSelector = new DOMTools.Selector(buttonClasses.attachButton);
+
+                const privateChannelsClass = WebpackModules.getByProps("privateChannels")?.privateChannels
+
+                const getCssRule = selector => `${selector} { display: none; }`;
+                const getTextAreaCssRule = child => `${channelTextAreaSelector||""} ${child} { display: none; }`;
+
+                return class RemoveChatButtons extends Plugin {
+                    styler = new Styler(config.info.name);
+
+                    constructor() {
+                        super();
+                        this.refreshLocaleFn = this.refreshLocaleFn.bind(this);
                     }
-                }
-                
-                patch() {
-                    Patcher.before(ChannelTextAreaContainer, "render", (_, [props]) => {
-                        if (!this.settings.cssOnly && this.settings.giftButton) props.shouldRenderPremiumGiftButton = false;
-                        if (!this.settings.cssOnly && this.settings.attachButton) props.renderAttachButton = () => {};
-                    });
-                    Patcher.after(ChannelGIFPickerButton, "render", (_, args, ret) => {
-                        return !this.settings.cssOnly && this.settings.gifButton ? null : ret;
-                    });
-                    Patcher.after(ChannelEmojiPicker, "render", (_, args, ret) => {
-                        return !this.settings.cssOnly && this.settings.emojiButton ? null : ret;
-                    });
-                    Patcher.after(ChannelStickerPickerButton, "render", (_, args, ret) => {
-                        return !this.settings.cssOnly && this.settings.stickerButton ? null : ret;
-                    });
-                }
 
-                cleanup() {
-                    Patcher.unpatchAll();
-                    this.removeStyles();
-                }
-                
-                removeStyles() {
-                    PluginUtilities.removeStyle(this.hideGiftKey);
-                    PluginUtilities.removeStyle(this.hideGifKey);
-                    PluginUtilities.removeStyle(this.hideEmojiKey);
-                    PluginUtilities.removeStyle(this.hideStickerKey);
-                    PluginUtilities.removeStyle(this.hideAttachKey);
-                }
+                    addStyles() {
+                        if (Messages) {
+                            const {PREMIUM_GIFT_BUTTON_LABEL, GIF_BUTTON_LABEL, PREMIUM_GUILD_BOOST_THIS_SERVER} = Messages;
+                        
+                            if (this.settings.giftButton) {
+                                this.styler.add(
+                                    `
+                                    ${getTextAreaCssRule(`[aria-label="${PREMIUM_GIFT_BUTTON_LABEL}"]`)}
+                                    ${getTextAreaCssRule(`[aria-label="${PREMIUM_GUILD_BOOST_THIS_SERVER}"]`)}
+                                    `
+                                );
+                            }
+                            if (this.settings.gifButton) this.styler.add(getTextAreaCssRule(`[aria-label="${GIF_BUTTON_LABEL}"]`));
+                        } else {
+                            Logger.warn("Messages not found!")
+                        }
+                        if (this.settings.emojiButton) this.styler.add(getTextAreaCssRule(emojiButtonSelector));
+                        if (this.settings.stickerButton) this.styler.add(getTextAreaCssRule(stickerButtonSelector));
+                        if (this.settings.attachButton) this.styler.add(getTextAreaCssRule(attachButtonSelector));
 
-                onStart() {
-                    try{
-                        this.patch();
-                    } catch(e) {
-                        Toasts.warn(`${config.info.name}: An error occured during intialiation, falling back to CSS-Only mode.`);
-                        Logger.error(`Error while patching: ${e}`);
-                        console.error(e);
-                        this.settings.cssOnly = true;
-                        Patcher.unpatchAll();
+                        if (this.settings.dms.friendsTab) this.styler.add(getCssRule(`.${privateChannelsClass} [href="/channels/@me"]`));
+                        if (this.settings.dms.premiumTab) this.styler.add(getCssRule(`.${privateChannelsClass} [href="/store"]`));
                     }
-                    this.addStyles();
-                }
-                
-                onStop() {
-                    this.cleanup();
-                }
-            
-                getSettingsPanel() {
-                    const panel = this.buildSettingsPanel();
-                    panel.addListener(() => {
-                        this.removeStyles();
+
+                    removeStyles() {
+                        PluginUtilities.removeStyle(this.hideGiftKey);
+                        PluginUtilities.removeStyle(this.hideGifKey);
+                        PluginUtilities.removeStyle(this.hideEmojiKey);
+                        PluginUtilities.removeStyle(this.hideStickerKey);
+                        PluginUtilities.removeStyle(this.hideAttachKey);
+                    }
+
+                    refreshStyles() {
+                        this.styler.removeAll();
                         this.addStyles();
-                    });
-                    return panel.getElement();
-                }
+                        Logger.info("Refreshed styles.")
+                    }
+
+                    refreshLocaleFn() {
+                        // Doesn't seem to work... Messages still holds the old value for some reason.
+                        // Keeping this anyway for now.
+                        setTimeout(this.refreshStyles(), 1000);
+                    }
+
+                    onStart() {
+                        this.addStyles();
+                        LocaleManager.on("locale", this.refreshLocaleFn);
+                    }
+
+                    onStop() {
+                        this.styler.removeAll();
+                        LocaleManager.off("locale", this.refreshLocaleFn);
+                    }
+
+                    getSettingsPanel() {
+                        const panel = this.buildSettingsPanel();
+                        panel.addListener(() => {
+                            this.refreshStyles();
+                        });
+                        return panel.getElement();
+                    }
+                };
             };
-        };
-        return plugin(Plugin, Api);
-    })(global.ZeresPluginLibrary.buildPlugin(config));
+            return plugin(Plugin, Api);
+        })(global.ZeresPluginLibrary.buildPlugin(config));
 })();
 /*@end@*/
