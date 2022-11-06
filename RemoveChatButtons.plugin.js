@@ -132,6 +132,13 @@ module.exports = (() => {
                     },
                     {
                         type: "switch",
+                        name: "Library Tab",
+                        note: "Removes the library tab button from the DM list.",
+                        id: "libraryTab",
+                        value: false
+                    },
+                    {
+                        type: "switch",
                         name: "Nitro Tab",
                         note: "Removes the nitro tab button from the DM list.",
                         id: "premiumTab",
@@ -224,6 +231,7 @@ module.exports = (() => {
                         if (this.settings.attachButton) this.styler.add(getTextAreaCssRule(attachButtonSelector));
 
                         if (this.settings.dms.friendsTab) this.styler.add(getCssRule(`.${privateChannelsClass} [href="/channels/@me"]`));
+                        if (this.settings.dms.libraryTab) this.styler.add(getCssRule(`.${privateChannelsClass} [href="/library"]`));
                         if (this.settings.dms.premiumTab) this.styler.add(getCssRule(`.${privateChannelsClass} [href="/store"]`));
                     }
 
