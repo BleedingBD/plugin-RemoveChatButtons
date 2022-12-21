@@ -1,10 +1,10 @@
 /**
 * @name RemoveChatButtons
 * @displayName RemoveChatButtons
-* @description Remove annoying buttons like the Gift button from the chat box.
+* @description Remove annoying stuff from your Discord clients.
 * @author Qb
 * @authorId 133659541198864384
-* @version 1.3.2
+* @version 1.4.0
 * @invite gj7JFa6mF8
 * @source https://github.com/BleedingBD/plugin-RemoveChatButtons
 * @updateUrl https://raw.githubusercontent.com/BleedingBD/plugin-RemoveChatButtons/main/RemoveChatButtons.plugin.js
@@ -77,17 +77,24 @@ module.exports = (() => {
                     github_username: "QbDesu"
                 }
             ],
-            version: "1.3.2",
-            description: "Remove annoying buttons like the Gift button from the chat box.",
+            version: "1.4.0",
+            description: "Hide annoying stuff from your Discord client.",
             github: "https://github.com/BleedingBD/plugin-RemoveChatButtons",
             github_raw: "https://raw.githubusercontent.com/BleedingBD/plugin-RemoveChatButtons/main/RemoveChatButtons.plugin.js"
         },
         defaultConfig: [
             {
                 type: "switch",
-                id: "giftButton",
-                name: "Remove Gift/Boost Button",
-                note: "Removes the Gift Nitro/Boost Server button from the chat.",
+                id: "emojiButton",
+                name: "Remove Emoji Button",
+                note: "Removes the Emoji button from the chat.",
+                value: false,
+            },
+            {
+                type: "switch",
+                id: "stickerButton",
+                name: "Remove Sticker Button",
+                note: "Removes the Sticker button from the chat.",
                 value: true,
             },
             {
@@ -99,17 +106,10 @@ module.exports = (() => {
             },
             {
                 type: "switch",
-                id: "stickerButton",
-                name: "Remove Sticker Button",
-                note: "Removes the Sticker button from the chat.",
+                id: "giftButton",
+                name: "Remove Gift/Boost Button",
+                note: "Removes the Gift Nitro/Boost Server button from the chat.",
                 value: true,
-            },
-            {
-                type: "switch",
-                id: "emojiButton",
-                name: "Remove Emoji Button",
-                note: "Removes the Emoji button from the chat.",
-                value: false,
             },
             {
                 type: "switch",
@@ -136,6 +136,41 @@ module.exports = (() => {
                         note: "Removes the nitro tab button from the DM list.",
                         id: "premiumTab",
                         value: true
+                    },
+                    {
+                        type: "switch",
+                        name: "Snowsgiving Tab",
+                        note: "Removes the seasonal Snowsgiving tab button from the DM list.",
+                        id: "snowsgivingTab",
+                        value: false
+                    }
+                ]
+            },
+            {
+                type: "category",
+                name: "Channel List",
+                id: "channels",
+                settings: [
+                    {
+                        type: "switch",
+                        id: "boostBar",
+                        name: "Boost Bar",
+                        note: "Removes the boost progress bar from the channel list.",
+                        value: true,
+                    }
+                ]
+            },
+            {
+                type: "category",
+                name: "Compatibility",
+                id: "compatibility",
+                settings: [
+                    {
+                        type: "switch",
+                        id: "invisibleTypingButton",
+                        name: "Remove Invisible Typing Button",
+                        note: "Removes the button added by Strencher's InvisibleTyping plugin from the chat.",
+                        value: false,
                     }
                 ]
             }
@@ -143,12 +178,14 @@ module.exports = (() => {
         changelog: [
             {
                 title: "Fixes", type: "fixed", items: [
-                    "Partial rewrite. Everything should work again."
+                    "Fixed incompatibilities with some themes that make use of the display attribute."
                 ]
             },
             {
-                title: "Changes", type: "changed", items: [
-                    "Moved to a new GitHub repo."
+                title: "Features", type: "features", items: [
+                    "Added a setting to remove the Snowsgiving tab from the DM list.",
+                    "Added a setting to remove the boost progress bar from the channel list.",
+                    "Added a setting to remove the invisible typing button from the chat because people keep asking for it."
                 ]
             }
         ]
@@ -181,19 +218,20 @@ module.exports = (() => {
                     PluginUtilities,
                     WebpackModules
                 } = Api;
-                
+
                 const Messages = WebpackModules.getByProps("PREMIUM_GIFT_BUTTON_LABEL");
 
                 const buttonClasses = WebpackModules.getByProps("emojiButton", "stickerButton");
                 const channelTextAreaSelector = new DOMTools.Selector(buttonClasses.channelTextArea);
                 const emojiButtonSelector = new DOMTools.Selector(buttonClasses.emojiButton);
                 const stickerButtonSelector = new DOMTools.Selector(buttonClasses.stickerButton);
+                const invisibleTypingButtonSelector = new DOMTools.Selector(".invisible-typing-button");
                 const attachButtonSelector = new DOMTools.Selector(buttonClasses.attachButton);
 
                 const privateChannelsClass = WebpackModules.getByProps("privateChannels")?.privateChannels
 
-                const getCssRule = selector => `${selector} { display: none; }`;
-                const getTextAreaCssRule = child => `${channelTextAreaSelector||""} ${child} { display: none; }`;
+                const getCssRule = selector => `${selector} { display: none !important; }`;
+                const getTextAreaCssRule = child => `${channelTextAreaSelector || ""} ${child} { display: none; }`;
 
                 return class RemoveChatButtons extends Plugin {
                     styler = new Styler(config.info.name);
@@ -204,9 +242,10 @@ module.exports = (() => {
                     }
 
                     addStyles() {
+                        // Chat Buttons
                         if (Messages) {
-                            const {PREMIUM_GIFT_BUTTON_LABEL, GIF_BUTTON_LABEL, PREMIUM_GUILD_BOOST_THIS_SERVER} = Messages;
-                        
+                            const { PREMIUM_GIFT_BUTTON_LABEL, GIF_BUTTON_LABEL, PREMIUM_GUILD_BOOST_THIS_SERVER } = Messages;
+
                             if (this.settings.giftButton) {
                                 this.styler.add(
                                     `
@@ -223,8 +262,26 @@ module.exports = (() => {
                         if (this.settings.stickerButton) this.styler.add(getTextAreaCssRule(stickerButtonSelector));
                         if (this.settings.attachButton) this.styler.add(getTextAreaCssRule(attachButtonSelector));
 
+                        // DMs
                         if (this.settings.dms.friendsTab) this.styler.add(getCssRule(`.${privateChannelsClass} [href="/channels/@me"]`));
                         if (this.settings.dms.premiumTab) this.styler.add(getCssRule(`.${privateChannelsClass} [href="/store"]`));
+                        if (this.settings.dms.snowsgivingTab) this.styler.add(getCssRule(`.${privateChannelsClass} [href="//discord.com/snowsgiving"]`));
+
+                        // Channels
+                        if (Messages) {
+                            if (this.settings.channels.boostBar) {
+                                const { PREMIUM_GUILD_SUBSCRIPTIONS_NUDGE_TOOLTIP_COMPLETE, PREMIUM_GUILD_SUBSCRIPTIONS_NUDGE_TOOLTIP, PREMIUM_GUILD_TIER_1, PREMIUM_GUILD_TIER_2, PREMIUM_GUILD_TIER_3 } = Messages;
+                                const levelName = "{levelName}";
+
+                                this.styler.add(getCssRule(`[aria-label="${PREMIUM_GUILD_SUBSCRIPTIONS_NUDGE_TOOLTIP_COMPLETE}"]`));
+                                if (true) this.styler.add(getCssRule(`[aria-label="${PREMIUM_GUILD_SUBSCRIPTIONS_NUDGE_TOOLTIP.replace(levelName, PREMIUM_GUILD_TIER_1)}"]`));
+                                if (true) this.styler.add(getCssRule(`[aria-label="${PREMIUM_GUILD_SUBSCRIPTIONS_NUDGE_TOOLTIP.replace(levelName, PREMIUM_GUILD_TIER_2)}"]`));
+                                if (true) this.styler.add(getCssRule(`[aria-label="${PREMIUM_GUILD_SUBSCRIPTIONS_NUDGE_TOOLTIP.replace(levelName, PREMIUM_GUILD_TIER_3)}"]`));
+                            }
+                        }
+
+                        // Compatibility
+                        if (this.settings.compatibility.invisibleTypingButton) this.styler.add(getTextAreaCssRule(invisibleTypingButtonSelector));
                     }
 
                     removeStyles() {
