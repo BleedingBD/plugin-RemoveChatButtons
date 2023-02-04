@@ -4,7 +4,7 @@
  * @description Remove annoying stuff from your Discord clients.
  * @author Qb
  * @authorId 133659541198864384
- * @version 1.5.0
+ * @version 1.5.1
  * @invite gj7JFa6mF8
  * @source https://github.com/BleedingBD/plugin-RemoveChatButtons
  * @updateUrl https://raw.githubusercontent.com/BleedingBD/plugin-RemoveChatButtons/main/RemoveChatButtons.plugin.js
@@ -77,7 +77,7 @@ module.exports = (() => {
                     github_username: 'QbDesu',
                 },
             ],
-            version: '1.5.0',
+            version: '1.5.1',
             description: 'Hide annoying stuff from your Discord client.',
             github: 'https://github.com/BleedingBD/plugin-RemoveChatButtons',
             github_raw: 'https://raw.githubusercontent.com/BleedingBD/plugin-RemoveChatButtons/main/RemoveChatButtons.plugin.js',
@@ -221,12 +221,7 @@ module.exports = (() => {
             {
                 title: 'Fixes',
                 type: 'fixed',
-                items: ['Fixed some minor inconsistency that may have caused incompatibility with some themes.'],
-            },
-            {
-                title: 'Features',
-                type: 'features',
-                items: ['Added support for voice chat panel buttons.', 'Added suppport for the invite button in the channel list.'],
+                items: ['Fixed invite button in the channel list not being removed.'],
             },
         ],
     };
@@ -360,9 +355,9 @@ module.exports = (() => {
                         }
 
                         if (this.settings.channels.inviteButton) {
-                            const { INVITE_TO_SERVER } = Messages;
+                            const { CREATE_INSTANT_INVITE } = Messages;
 
-                            this.styler.add(getAriaLabelRule(iconItemSelector, INVITE_TO_SERVER));
+                            this.styler.add(getAriaLabelRule(iconItemSelector, CREATE_INSTANT_INVITE));
                         }
                     }
 
