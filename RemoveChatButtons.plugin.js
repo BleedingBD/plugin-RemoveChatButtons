@@ -4,7 +4,7 @@
  * @description Remove annoying stuff from your Discord clients.
  * @author Qb
  * @authorId 133659541198864384
- * @version 1.5.1
+ * @version 1.5.2
  * @invite gj7JFa6mF8
  * @source https://github.com/BleedingBD/plugin-RemoveChatButtons
  * @updateUrl https://raw.githubusercontent.com/BleedingBD/plugin-RemoveChatButtons/main/RemoveChatButtons.plugin.js
@@ -77,7 +77,7 @@ module.exports = (() => {
                     github_username: 'QbDesu',
                 },
             ],
-            version: '1.5.1',
+            version: '1.5.2',
             description: 'Hide annoying stuff from your Discord client.',
             github: 'https://github.com/BleedingBD/plugin-RemoveChatButtons',
             github_raw: 'https://raw.githubusercontent.com/BleedingBD/plugin-RemoveChatButtons/main/RemoveChatButtons.plugin.js',
@@ -221,7 +221,7 @@ module.exports = (() => {
             {
                 title: 'Fixes',
                 type: 'fixed',
-                items: ['Fixed invite button in the channel list not being removed.'],
+                items: ['Fixed the voice panel activity button not being removed when you don\'t have activity perms.'],
             },
         ],
     };
@@ -363,14 +363,14 @@ module.exports = (() => {
 
                     // Voice
                     if (Messages) {
-                        const { CAMERA_ON, CAMERA_OFF, SHARE_YOUR_SCREEN, EMBEDDED_ACTIVITIES_ROCKET_BUTTON_A11Y_LABEL } = Messages;
+                        const { CAMERA_ON, CAMERA_OFF, SHARE_YOUR_SCREEN, EMBEDDED_ACTIVITIES_ROCKET_BUTTON_A11Y_LABEL, EMBEDDED_ACTIVITIES_INVALID_PERMISSIONS } = Messages;
 
                         const actionButtons = voiceActionButtonsSelector + ' ';
 
                         if (this.settings.voice.cameraPanelButton) this.styler.add(getAriaLabelRule(actionButtons, CAMERA_ON, CAMERA_OFF));
                         if (this.settings.voice.screensharePanelButton) this.styler.add(getAriaLabelRule(actionButtons, SHARE_YOUR_SCREEN));
                         if (this.settings.voice.activityPanelButton)
-                            this.styler.add(getAriaLabelRule(actionButtons, EMBEDDED_ACTIVITIES_ROCKET_BUTTON_A11Y_LABEL));
+                            this.styler.add(getAriaLabelRule(actionButtons, EMBEDDED_ACTIVITIES_ROCKET_BUTTON_A11Y_LABEL, EMBEDDED_ACTIVITIES_INVALID_PERMISSIONS));
                     }
 
                     // Compatibility
