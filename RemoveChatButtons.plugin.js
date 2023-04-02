@@ -4,7 +4,7 @@
  * @description Remove annoying stuff from your Discord clients.
  * @author Qb
  * @authorId 133659541198864384
- * @version 1.5.2
+ * @version 1.5.3
  * @invite gj7JFa6mF8
  * @source https://github.com/BleedingBD/plugin-RemoveChatButtons
  * @updateUrl https://raw.githubusercontent.com/BleedingBD/plugin-RemoveChatButtons/main/RemoveChatButtons.plugin.js
@@ -77,7 +77,7 @@ module.exports = (() => {
                     github_username: 'QbDesu',
                 },
             ],
-            version: '1.5.2',
+            version: '1.5.3',
             description: 'Hide annoying stuff from your Discord client.',
             github: 'https://github.com/BleedingBD/plugin-RemoveChatButtons',
             github_raw: 'https://raw.githubusercontent.com/BleedingBD/plugin-RemoveChatButtons/main/RemoveChatButtons.plugin.js',
@@ -221,7 +221,7 @@ module.exports = (() => {
             {
                 title: 'Fixes',
                 type: 'fixed',
-                items: ['Fixed the voice panel activity button not being removed when you don\'t have activity perms.'],
+                items: ['Fixed parts of the plugin not working with non-English languages set.'],
             },
         ],
     };
@@ -272,8 +272,6 @@ module.exports = (() => {
                 return classString ? '.' + classString.replace(/ /g, '.') : '';
             };
 
-            const Messages = getModule(Filters.byProps('PREMIUM_GIFT_BUTTON_LABEL'));
-
             const buttonClasses = getModule(Filters.byProps('emojiButton', 'stickerButton'));
             const channelTextAreaSelector = toSelector(buttonClasses.channelTextArea);
             const emojiButtonSelector = toSelector(buttonClasses.emojiButton);
@@ -296,6 +294,27 @@ module.exports = (() => {
             const getAriaLabelRule = (pre, ...labels) =>
                 getCssRule(labels.map((label) => `${pre || ''}${getAriaLabelSelector(label)}`).join(', '));
 
+            const createMessagesProxy = () => {
+                if (!LocaleManager) {
+                    Logger.warn('LocaleManager not found!');
+                    return {};
+                }
+                if (!LocaleManager.Messages) {
+                    Logger.warn('Messages not found!');
+                    return {};
+                }
+
+                return new Proxy(LocaleManager.Messages, {
+                    get: (target, prop) => {
+                        const message = target[prop];
+                        if (typeof message === 'string') return message;
+                        if (message?.message) return message.message;
+                        Logger.error(`Translation not found: ${prop}`);
+                        return prop;
+                    },
+                });
+            }
+
             return class RemoveChatButtons extends Plugin {
                 styler = new Styler(config.info.name);
 
@@ -305,9 +324,7 @@ module.exports = (() => {
                 }
 
                 addStyles() {
-                    if (!Messages) {
-                        Logger.warn('Messages Module not found!');
-                    }
+                    const Messages = createMessagesProxy();
 
                     // Chat Buttons
                     if (Messages) {
