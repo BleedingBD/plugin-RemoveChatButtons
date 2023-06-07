@@ -4,7 +4,7 @@
  * @description Remove annoying stuff from your Discord clients.
  * @author Qb
  * @authorId 133659541198864384
- * @version 1.5.3
+ * @version 1.6.0
  * @invite gj7JFa6mF8
  * @source https://github.com/BleedingBD/plugin-RemoveChatButtons
  * @updateUrl https://raw.githubusercontent.com/BleedingBD/plugin-RemoveChatButtons/main/RemoveChatButtons.plugin.js
@@ -77,7 +77,7 @@ module.exports = (() => {
                     github_username: 'QbDesu',
                 },
             ],
-            version: '1.5.3',
+            version: '1.6.0',
             description: 'Hide annoying stuff from your Discord client.',
             github: 'https://github.com/BleedingBD/plugin-RemoveChatButtons',
             github_raw: 'https://raw.githubusercontent.com/BleedingBD/plugin-RemoveChatButtons/main/RemoveChatButtons.plugin.js',
@@ -120,6 +120,41 @@ module.exports = (() => {
             },
             {
                 type: 'category',
+                name: 'Message Actions',
+                id: 'messageActions',
+                settings: [
+                    {
+                        type: 'switch',
+                        id: 'reactionButton',
+                        name: 'Remove Reaction Button',
+                        note: 'Removes the "Add Reaction" button from messages.',
+                        value: false,
+                    },
+                    {
+                        type: 'switch',
+                        id: 'superReactionButton',
+                        name: 'Remove Super Reaction Button',
+                        note: 'Removes the "Add Super Reaction" button from messages.',
+                        value: false,
+                    },
+                    {
+                        type: 'switch',
+                        id: 'editButton',
+                        name: 'Remove Edit Button',
+                        note: 'Removes the "Edit" button from messages.',
+                        value: false,
+                    },
+                    {
+                        type: 'switch',
+                        id: 'replyButton',
+                        name: 'Remove Reply Button',
+                        note: 'Removes the "Reply" button from messages.',
+                        value: false,
+                    },
+                ],
+            },
+            {
+                type: 'category',
                 name: 'Direct Messages',
                 id: 'dms',
                 settings: [
@@ -141,8 +176,15 @@ module.exports = (() => {
                         type: 'switch',
                         id: 'snowsgivingTab',
                         name: 'Remove Snowsgiving Tab',
-                        note: 'Removes the seasonal Snowsgiving tab button from the DM list.',
+                        note: 'Removes the seasonal "Snowsgiving" tab button from the DM list.',
                         value: false,
+                    },
+                    {
+                        type: 'switch',
+                        id: 'discordBirthdayTab',
+                        name: 'Remove Discord\'s Birthday Tab',
+                        note: 'Removes the seasonal "Discord\'s Birthday" tab button from the DM list.',
+                        value: true,
                     },
                 ],
             },
@@ -219,9 +261,9 @@ module.exports = (() => {
         ],
         changelog: [
             {
-                title: 'Fixes',
-                type: 'fixed',
-                items: ['Fixed parts of the plugin not working with non-English languages set.'],
+                title: 'Added',
+                type: 'added',
+                items: ['Added support for message action buttons like the super reaction button. Also added support for the seasonal Discord\'s Birthday tab. Unfortunately you will have to modify the settings manually in the JSON file because settings are currently broken in ZLibrary.'],
             },
         ],
     };
@@ -277,6 +319,9 @@ module.exports = (() => {
             const emojiButtonSelector = toSelector(buttonClasses.emojiButton);
             const stickerButtonSelector = toSelector(buttonClasses.stickerButton);
             const attachButtonSelector = toSelector(buttonClasses.attachButton);
+
+            const messageActionButtonsClass = getModule(Filters.byProps('buttons', 'cozyMessage'))?.buttons;
+            const messageActionButtonsSelector = toSelector(messageActionButtonsClass);
 
             const privateChannelsClass = getModule(Filters.byProps('privateChannels'))?.privateChannels;
             const privateChannelsSelector = toSelector(privateChannelsClass);
@@ -340,11 +385,22 @@ module.exports = (() => {
                     if (this.settings.stickerButton) this.styler.add(getTextAreaCssRule(stickerButtonSelector));
                     if (this.settings.attachButton) this.styler.add(getTextAreaCssRule(attachButtonSelector));
 
+                    // Message Actions
+                    if (Messages) {
+                        const { ADD_REACTION, ADD_BURST_REACTION, EDIT, MESSAGE_ACTION_REPLY } = Messages;
+                        if (this.settings.messageActions.reactionButton) this.styler.add(getAriaLabelRule(messageActionButtonsSelector + ' ', ADD_REACTION));
+                        if (this.settings.messageActions.superReactionButton) this.styler.add(getAriaLabelRule(messageActionButtonsSelector + ' ', ADD_BURST_REACTION));
+                        if (this.settings.messageActions.editButton) this.styler.add(getAriaLabelRule(messageActionButtonsSelector + ' ', EDIT));
+                        if (this.settings.messageActions.replyButton) this.styler.add(getAriaLabelRule(messageActionButtonsSelector + ' ', MESSAGE_ACTION_REPLY));
+                    }
+
                     // DMs
                     if (this.settings.dms.friendsTab) this.styler.add(getCssRule(`${privateChannelsSelector} [href="/channels/@me"]`));
                     if (this.settings.dms.premiumTab) this.styler.add(getCssRule(`${privateChannelsSelector} [href="/store"]`));
                     if (this.settings.dms.snowsgivingTab)
                         this.styler.add(getCssRule(`${privateChannelsSelector} [href="//discord.com/snowsgiving"]`));
+                    if (this.settings.dms.discordBirthdayTab)
+                        this.styler.add(getCssRule(`${privateChannelsSelector} [href="/activities"]`));
 
                     // Channels
                     if (Messages) {
