@@ -186,6 +186,14 @@ module.exports = (() => {
                         note: 'Removes the seasonal "Discord\'s Birthday" tab button from the DM list.',
                         value: true,
                     },
+                    {
+                        type: 'switch',
+                        id: 'discordShopTab',
+                        name: 'Remove Discord\'s Shop Tab',
+                        note: 'Removes the Discord Shop tab button from the DM list.',
+                        value: false,
+
+                    }
                 ],
             },
             {
@@ -401,6 +409,7 @@ module.exports = (() => {
                         this.styler.add(getCssRule(`${privateChannelsSelector} [href="//discord.com/snowsgiving"]`));
                     if (this.settings.dms.discordBirthdayTab)
                         this.styler.add(getCssRule(`${privateChannelsSelector} [href="/activities"]`));
+                    if (this.settings.dms.discordShopTab) this.styler.add(getCssRule(`${privateChannelsSelector} [href="/shop"]`));
 
                     // Channels
                     if (Messages) {
