@@ -4,7 +4,7 @@
  * @description Remove annoying stuff from your Discord clients.
  * @author Qb
  * @authorId 133659541198864384
- * @version 1.6.0
+ * @version 1.6.1
  * @invite gj7JFa6mF8
  * @source https://github.com/BleedingBD/plugin-RemoveChatButtons
  * @updateUrl https://raw.githubusercontent.com/BleedingBD/plugin-RemoveChatButtons/main/RemoveChatButtons.plugin.js
@@ -77,7 +77,7 @@ module.exports = (() => {
                     github_username: 'QbDesu',
                 },
             ],
-            version: '1.6.0',
+            version: '1.6.1',
             description: 'Hide annoying stuff from your Discord client.',
             github: 'https://github.com/BleedingBD/plugin-RemoveChatButtons',
             github_raw: 'https://raw.githubusercontent.com/BleedingBD/plugin-RemoveChatButtons/main/RemoveChatButtons.plugin.js',
@@ -186,6 +186,13 @@ module.exports = (() => {
                         note: 'Removes the seasonal "Discord\'s Birthday" tab button from the DM list.',
                         value: true,
                     },
+					{
+                        type: 'switch',
+                        id: 'discordShopTab',
+                        name: 'Remove Discord\'s Shop Tab',
+                        note: 'Removes the Shop tab button from the DM list.',
+                        value: true,
+                    },
                 ],
             },
             {
@@ -263,7 +270,7 @@ module.exports = (() => {
             {
                 title: 'Added',
                 type: 'added',
-                items: ['Added support for message action buttons like the super reaction button. Also added support for the seasonal Discord\'s Birthday tab. Unfortunately you will have to modify the settings manually in the JSON file because settings are currently broken in ZLibrary.'],
+                items: ['Added support for removing the Shop tab in Direct Messages.'],
             },
         ],
     };
@@ -401,6 +408,8 @@ module.exports = (() => {
                         this.styler.add(getCssRule(`${privateChannelsSelector} [href="//discord.com/snowsgiving"]`));
                     if (this.settings.dms.discordBirthdayTab)
                         this.styler.add(getCssRule(`${privateChannelsSelector} [href="/activities"]`));
+		            if (this.settings.dms.discordShopTab)
+                        this.styler.add(getCssRule(`${privateChannelsSelector} [href="/shop"]`));
 
                     // Channels
                     if (Messages) {
