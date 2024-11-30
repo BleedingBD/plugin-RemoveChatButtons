@@ -119,6 +119,13 @@ module.exports = (() => {
                 value: false,
             },
             {
+                type: 'switch',
+                id: 'appLauncherButton',
+                name: 'Remove App Launcher Button',
+                note: 'Removes the App Launcher button from the chat.',
+                value: false,
+            },
+            {
                 type: 'category',
                 name: 'Message Actions',
                 id: 'messageActions',
@@ -149,6 +156,13 @@ module.exports = (() => {
                         id: 'replyButton',
                         name: 'Remove Reply Button',
                         note: 'Removes the "Reply" button from messages.',
+                        value: false,
+                    },
+                    {
+                        type: 'switch',
+                        id: 'forwardButton',
+                        name: 'Remove Forward Button',
+                        note: 'Removes the "Forward" button from messages.',
                         value: false,
                     },
                 ],
@@ -185,6 +199,13 @@ module.exports = (() => {
                         name: 'Remove Discord\'s Birthday Tab',
                         note: 'Removes the seasonal "Discord\'s Birthday" tab button from the DM list.',
                         value: true,
+                    },
+                    {
+                        type: 'switch',
+                        id: 'discordShopTab',
+                        name: 'Remove Discord\'s Shop Tab',
+                        note: 'Removes the Discord Shop tab button from the DM list.',
+                        value: false,
                     },
                 ],
             },
@@ -242,6 +263,41 @@ module.exports = (() => {
                         note: 'Removes the activity button from the voice chat panel in the bottom left.',
                         value: false,
                     },
+                    {
+                        type: 'switch',
+                        id: 'soundboardPanelButton',
+                        name: 'Remove Soundboard Panel Button',
+                        note: 'Removes the soundboard button from the voice chat panel in the bottom left.',
+                        value: false,
+                    },
+                    {
+                        type: 'switch',
+                        id: 'krispButton',
+                        name: 'Remove Noise Suppression Button',
+                        note: 'Removes the noise supression button from the user voice chat panel.',
+                        value: false,
+                    },
+                ],
+            },
+            {
+                type: 'category',
+                name: 'Toolbar',
+                id: 'toolbar',
+                settings: [
+                    {
+                        type: 'switch',
+                        id: 'inboxButton',
+                        name: 'Remove Inbox Button',
+                        note: "Removes the Inbox button.",
+                        value: false,
+                    },
+                    {
+                        type: 'switch',
+                        id: 'helpButton',
+                        name: 'Remove Help Button',
+                        note: "Removes the help button in the top right.",
+                        value: false,
+                    },
                 ],
             },
             {
@@ -279,7 +335,7 @@ module.exports = (() => {
                         cancelText: 'Cancel',
                         onConfirm: () => {
                             require('request').get(
-                                'https://rauenzi.github.io/BDPluginLibrary/release/0PluginLibrary.plugin.js',
+                                'https://zerebos.github.io/BDPluginLibrary/release/0PluginLibrary.plugin.js',
                                 async (error, response, body) => {
                                     if (error) return require('electron').shell.openExternal('https://betterdiscord.app/Download?id=9');
                                     await new Promise((r) =>
@@ -319,6 +375,10 @@ module.exports = (() => {
             const emojiButtonSelector = toSelector(buttonClasses.emojiButton);
             const stickerButtonSelector = toSelector(buttonClasses.stickerButton);
             const attachButtonSelector = toSelector(buttonClasses.attachButton);
+            //console.log(buttonClasses)
+
+            const appLauncherClass = getModule(Filters.byProps('channelAppLauncher'));
+            const appLauncherButton = toSelector(appLauncherClass.channelAppLauncher);
 
             const messageActionButtonsClass = getModule(Filters.byProps('buttons', 'cozyMessage'))?.buttons;
             const messageActionButtonsSelector = toSelector(messageActionButtonsClass);
@@ -332,6 +392,9 @@ module.exports = (() => {
 
             const voiceActionButtonsClass = getModule(Filters.byProps('actionButtons', 'voiceUsers'))?.actionButtons;
             const voiceActionButtonsSelector = toSelector(voiceActionButtonsClass);
+
+            const inboxButtonClass = getModule(Filters.byProps('recentsIcon'))?.recentsIcon;
+            const inboxButtonSelector = toSelector(inboxButtonClass);
 
             const getCssRule = (selector) => `${selector} { display: none !important; }`;
             const getTextAreaCssRule = (child) => getCssRule(`${channelTextAreaSelector} ${child}`);
@@ -373,26 +436,23 @@ module.exports = (() => {
 
                     // Chat Buttons
                     if (Messages) {
-                        const { PREMIUM_GIFT_BUTTON_LABEL, GIF_BUTTON_LABEL, PREMIUM_GUILD_BOOST_THIS_SERVER } = Messages;
-
-                        if (this.settings.giftButton)
-                            this.styler.add(
-                                getAriaLabelRule(channelTextAreaSelector + ' ', PREMIUM_GIFT_BUTTON_LABEL, PREMIUM_GUILD_BOOST_THIS_SERVER),
-                            );
-                        if (this.settings.gifButton) this.styler.add(getAriaLabelRule(channelTextAreaSelector + ' ', GIF_BUTTON_LABEL));
+                        if (this.settings.giftButton) this.styler.add(getCssRule(`button${getAriaLabelSelector('Send a gift')}`));
+                        if (this.settings.gifButton) this.styler.add(getAriaLabelRule(channelTextAreaSelector + ' ', "Open GIF picker"));
                     }
-                    if (this.settings.emojiButton) this.styler.add(getTextAreaCssRule(emojiButtonSelector));
+                    if (this.settings.emojiButton) this.styler.add(getAriaLabelRule(channelTextAreaSelector + ' ', "Select emoji"));
                     if (this.settings.stickerButton) this.styler.add(getTextAreaCssRule(stickerButtonSelector));
                     if (this.settings.attachButton) this.styler.add(getTextAreaCssRule(attachButtonSelector));
+                    if (this.settings.appLauncherButton) this.styler.add(getCssRule(appLauncherButton));
 
                     // Message Actions
                     if (Messages) {
-                        const { ADD_REACTION, ADD_BURST_REACTION, EDIT, MESSAGE_ACTION_REPLY } = Messages;
-                        if (this.settings.messageActions.reactionButton) this.styler.add(getAriaLabelRule(messageActionButtonsSelector + ' ', ADD_REACTION));
+                        const { ADD_BURST_REACTION } = Messages;
                         if (this.settings.messageActions.superReactionButton) this.styler.add(getAriaLabelRule(messageActionButtonsSelector + ' ', ADD_BURST_REACTION));
-                        if (this.settings.messageActions.editButton) this.styler.add(getAriaLabelRule(messageActionButtonsSelector + ' ', EDIT));
-                        if (this.settings.messageActions.replyButton) this.styler.add(getAriaLabelRule(messageActionButtonsSelector + ' ', MESSAGE_ACTION_REPLY));
                     }
+                    if (this.settings.messageActions.reactionButton) this.styler.add(getAriaLabelRule(messageActionButtonsSelector + ' ', "Add Reaction"));
+                    if (this.settings.messageActions.editButton) this.styler.add(getAriaLabelRule(messageActionButtonsSelector + ' ', "Edit"));
+                    if (this.settings.messageActions.replyButton) this.styler.add(getAriaLabelRule(messageActionButtonsSelector + ' ', "Reply"));
+                    if (this.settings.messageActions.forwardButton) this.styler.add(getAriaLabelRule(messageActionButtonsSelector + ' ', "Forward"));
 
                     // DMs
                     if (this.settings.dms.friendsTab) this.styler.add(getCssRule(`${privateChannelsSelector} [href="/channels/@me"]`));
@@ -401,6 +461,7 @@ module.exports = (() => {
                         this.styler.add(getCssRule(`${privateChannelsSelector} [href="//discord.com/snowsgiving"]`));
                     if (this.settings.dms.discordBirthdayTab)
                         this.styler.add(getCssRule(`${privateChannelsSelector} [href="/activities"]`));
+                    if (this.settings.dms.discordShopTab) this.styler.add(getCssRule(`${privateChannelsSelector} [href="/shop"]`));
 
                     // Channels
                     if (Messages) {
@@ -436,15 +497,18 @@ module.exports = (() => {
 
                     // Voice
                     if (Messages) {
-                        const { CAMERA_ON, CAMERA_OFF, SHARE_YOUR_SCREEN, EMBEDDED_ACTIVITIES_ROCKET_BUTTON_A11Y_LABEL, EMBEDDED_ACTIVITIES_INVALID_PERMISSIONS } = Messages;
-
                         const actionButtons = voiceActionButtonsSelector + ' ';
 
-                        if (this.settings.voice.cameraPanelButton) this.styler.add(getAriaLabelRule(actionButtons, CAMERA_ON, CAMERA_OFF));
-                        if (this.settings.voice.screensharePanelButton) this.styler.add(getAriaLabelRule(actionButtons, SHARE_YOUR_SCREEN));
-                        if (this.settings.voice.activityPanelButton)
-                            this.styler.add(getAriaLabelRule(actionButtons, EMBEDDED_ACTIVITIES_ROCKET_BUTTON_A11Y_LABEL, EMBEDDED_ACTIVITIES_INVALID_PERMISSIONS));
+                        if (this.settings.voice.cameraPanelButton) this.styler.add(getAriaLabelRule(actionButtons, "Turn On Camera", "Turn Off Camera"));
+                        if (this.settings.voice.screensharePanelButton) this.styler.add(getAriaLabelRule(actionButtons, "Share Your Screen"));
+                        if (this.settings.voice.activityPanelButton) this.styler.add(getAriaLabelRule(actionButtons, "Start An Activity"));
+                        if (this.settings.voice.soundboardPanelButton) this.styler.add(getAriaLabelRule(actionButtons, "Open Soundboard"))
+                        if (this.settings.voice.krispButton) this.styler.add(getCssRule(`button${getAriaLabelSelector('Noise Suppression powered by Krisp')}`))
                     }
+
+                    // Toolbar
+                    if (this.settings.toolbar.helpButton) this.styler.add(getCssRule(`a[href="https://support.discord.com"]`));
+                    if (this.settings.toolbar.inboxButton) this.styler.add(getCssRule(inboxButtonSelector))
 
                     // Compatibility
                     if (this.settings.compatibility.invisibleTypingButton) this.styler.add(getTextAreaCssRule('.invisible-typing-button'));
